@@ -98,7 +98,9 @@ export default {
     ...mapActions(["setCurrentUser"]),
     login() {
       this.loading = true;
+      // firebase componente, 
       Firebase.auth()
+      // valida los datos para redirigir al home
       .signInWithEmailAndPassword(
         this.formLabelAlign.user,
         this.formLabelAlign.password
@@ -109,10 +111,12 @@ export default {
           this.setCurrentUser(this.formLabelAlign.user);
           this.loading = false;
         },
+        // cuando algo responde mal ej: usuario incorrecto
         () => {
           this.loading = false;
         }
       )
+      // Cuando responde mal ej: la base de datos no existe o se cae el servicio
       .catch(() => {
         this.loading = false;
       })

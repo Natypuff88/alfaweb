@@ -1,25 +1,27 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-//import Firebase from 'firebase'
+
+import Firebase from 'firebase'
 
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
   state: {
+    isLoading: false,
     currentUser: {
       email: '',
       path: '/login'
     },
     cursos: [
-      {
+      /*{
         codigo: "C00101",
         nombre: "Html Básico",
         estado: true,
         costo: 10000, 
         duracion: "1 mes",
-        descripcion: "Curso básico de HTML para principiantes",
+        descripcion: "Curso básico de HTML para prin  cipiantes",
         cupos: 35,
-        inscriots: 0,
+        inscritos: 0,
         imagen: "https://www.w3.org/html/logo/downloads/HTML5_Logo_512.png"
 
       },
@@ -32,7 +34,7 @@ const store = new Vuex.Store({
         duracion: "1 mes",
         descripcion: "Aprendiendo estilos con CSS desde el nivel más básico",
         cupos: 35,
-        inscriots: 23,
+        inscritos: 23,
         imagen: "https://lineadecodigo.com/wp-content/uploads/2014/04/css.png"
 
       },
@@ -45,7 +47,7 @@ const store = new Vuex.Store({
         duracion: "2 mes",
         descripcion: "Programando para la web con Javascript",
         cupos: 25,
-        inscriots: 0,
+        inscritos: 0,
         imagen: "https://i.blogs.es/545cf8/es6-logo/450_1000.png"
 
       },
@@ -58,7 +60,7 @@ const store = new Vuex.Store({
         duracion: "2 mes",
         descripcion: "Curso con las nuevas actualizaciones de Javascript",
         cupos: 20,
-        inscriots: 10,
+        inscritos: 10,
         imagen: "https://i.blogs.es/545cf8/es6-logo/450_1000.png"
 
       },
@@ -70,7 +72,7 @@ const store = new Vuex.Store({
         duracion: "5 mes",
         descripcion: "Framework Vue.js desde principiante a avanzado",
         cupos: 35,
-        inscriots: 35,
+        inscritos: 35,
         imagen: "https://thumbs.gfycat.com/PinkPiercingBull-size_restricted.gif"
 
       },
@@ -82,21 +84,31 @@ const store = new Vuex.Store({
         duracion: "1 mes",
         descripcion: "Mejorando los estilos con mayor potencia mediante SASS",
         cupos: 45,
-        inscriots: 35,
+        inscritos: 35,
         imagen: "https://miro.medium.com/max/512/1*9U1toerFxB8aiFRreLxEUQ.png"
 
-      }
-    ]
+      }*/
+    ],
+    loading: false,
   },
   getters: {
     getCurrentUser({currentUser}){
       return currentUser;
+    },
+    getCursos({cursos}){
+      return cursos
+    },
+    getIsLoading({isLoading}) {
+      return isLoading;
     }
   },
   mutations: {
+    isLoading(state, load){
+      state.isLoading = load;
+    },
     setCurrentUser(state, user){
       state.currentUser.email = user;
-      state.currentUser.path = '/home';
+      state.currentUser.path = '/Home';
     },
     setCurrentPath(state, path) {
       state.currentUser.path = path;
@@ -104,18 +116,97 @@ const store = new Vuex.Store({
     logout(state){
       state.currentUser.email = '';
       state.currentUser.path = '/login';
-    }
+    },
+    setCursos(state,cursos){
+      state.cursos = cursos
+    },
   },
   actions: {
+    stopIsLoading({commit}) {
+      commit("isLoading", false);
+    },
     setCurrentUser({ commit }, user) {
+      commit("isLoading", true);
       commit("setCurrentUser", user)
+  
+
     },
     setCurrentPath({ commit }, path) {
+      commit("isLoading", true);
       commit("setCurrentPath", path)
+   
+
     },
     logout({commit}){
+      commit("isLoading", true);
       commit('logout')
-    }
+
+    },
+    // para eliminar el curso de firebase
+     eliminarCurso({ commit, dispatch }, cursoId) {
+       commit("isLoading", true);
+        Firebase
+          .firestore()
+          .collection("curso")
+          .doc(cursoId)
+          .delete()
+          .then(() => {
+            dispatch("getCursos");
+          });
+    },
+      // para agregar el curso de firebase
+    agregarCurso({ commit, dispatch }, curso) {
+      commit("isLoading", true);
+      Firebase
+        .firestore()
+        .collection("curso")
+        .add(curso)
+        .then(() => {
+          dispatch("getCursos");
+        })
+    },
+
+    // con esta función llamo al Firebase para acceder al firestore y tomar la colección "curso"
+    getCursos({ commit }) {
+      commit("isLoading" , true);
+       Firebase
+        .firestore()
+        .collection("curso")
+        //.where("codigo", "==", "A0001")
+        //.where("precio", ">", "2000")
+        .get()
+        .then((resp) => {
+          const cursos = [];
+          resp.forEach((doc) => {
+            const data = doc.data();
+            cursos.push({ 
+              id: doc.id,
+              ...data, 
+            });
+          });
+          commit("setCursos", cursos)
+        }).then(() => {
+          commit("isLoading" , false);
+        })
+        .catch(() => {
+          commit("isLoading" , false);
+        })
+       
+
+    },
+    // para poder editar el curso seleccionado y guardarlo en el firestore
+    async editarCurso({ commit, dispatch}, { curso, id }) {
+      
+      commit("isLoading", true);
+      Firebase
+        .firestore()
+        .collection("curso")
+        .doc(id)
+        .set(curso)
+        .then(() => {
+          dispatch("getCursos");
+        });
+    },
   }
 });
 

@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Firebase from "firebase";
 import Home from '../views/Home.vue'
+import Administracion from '../views/Administracion.vue'
 
 
 Vue.use(Router)
@@ -24,6 +25,14 @@ const routes = [
       component: Home,
       meta: { login: true }
     },
+
+    {
+      path: '/administracion',
+      name: 'Administracion',
+      component: Administracion,
+      meta: { login: true }
+    },
+
     {
       path: "*",
       redirect: "/login",
@@ -34,6 +43,13 @@ const routes = [
       name:'Registro',
       component:() => import('../views/Registro.vue'),
       meta: { login: false}
+    },
+    {
+      path:"/editar/:id",
+      name:'Editar',
+      component:() => import('../views/Editar.vue'),
+      meta: { login: true},
+      props: true,
     },
   ]
   

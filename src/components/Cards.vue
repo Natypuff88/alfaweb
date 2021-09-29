@@ -1,66 +1,64 @@
 <template>
-  <v-container>
+  <v-container class="mt-5">
     <v-row justify="space-around">
-      <v-card width="400">
+      <v-card width="300" class="mb-5" v-for="curso in listadoCursos" v-bind:key=" curso.id">
         <v-img
           height="200px"
-          src="https://cdn.pixabay.com/photo/2020/07/12/07/47/bee-5396362_1280.jpg"
-        >
-          <v-app-bar
-            flat
-            color="rgba(0, 0, 0, 0)"
-          >
-            <v-app-bar-nav-icon color="white"></v-app-bar-nav-icon>
+          :src="curso.imagen">
 
-            <v-toolbar-title class="text-h6 white--text pl-0">
-              Messages
-            </v-toolbar-title>
-
-            <v-spacer></v-spacer>
-
-            <v-btn
-              color="white"
-              icon
-            >
-              <v-icon>mdi-dots-vertical</v-icon>
-            </v-btn>
-          </v-app-bar>
-
-          <v-card-title class="white--text mt-8">
-            <v-avatar size="56">
-              <img
-                alt="user"
-                src="https://cdn.pixabay.com/photo/2020/06/24/19/12/cabbage-5337431_1280.jpg"
-              >
-            </v-avatar>
-            <p class="ml-3">
-              John Doe
-            </p>
-          </v-card-title>
+          
         </v-img>
 
         <v-card-text>
           <div class="font-weight-bold ml-8 mb-2">
-            Today
+            {{curso.nombre}}
+          </div>
+          <div class="font-weight-bold ml-8 mb-2">
+           Información
           </div>
 
-          <v-timeline
-            align-top
-            dense
-          >
-            <v-timeline-item
-              v-for="message in messages"
-              :key="message.time"
-              :color="message.color"
-              small
-            >
+          <v-timeline align-top  dense>
+            <v-timeline-item color="deep-purple lighten-1" small>
               <div>
                 <div class="font-weight-normal">
-                  <strong>{{ message.from }}</strong> @{{ message.time }}
+                  <strong>Costo</strong> : {{ curso.costo }}
                 </div>
-                <div>{{ message.message }}</div>
+                <div class="font-weight-normal">
+                  <strong>Duración</strong> : {{ curso.duracion }}
+                </div>
               </div>
             </v-timeline-item>
+            <v-timeline-item color="green" small>
+              <div>
+                <div class="font-weight-normal">
+                  <strong>Cupo</strong> : {{ curso.cupos }}
+                </div>
+                <div class="font-weight-normal">
+                  <strong>Completado</strong> : {{ (curso.cupo === curso.inscritos) ?  'Completado' : 'No'}}
+                </div>
+              </div>
+            </v-timeline-item>
+            <v-timeline-item color="deep-purple lighten-1" small>
+              <div>
+                <div class="font-weight-normal">
+                  <strong>Fecha Registro</strong>
+                </div>
+                <div class="font-weight-normal">
+                 {{ curso.registro }}
+                </div>
+              </div>
+            </v-timeline-item>
+            <v-timeline-item color="green" small>
+              <div>
+                <div class="font-weight-normal">
+                  <strong>Descripcion</strong> 
+                </div>
+                <div class="font-weight-normal">
+                  {{ curso.descripcion }}
+                </div>
+              </div>
+            </v-timeline-item>
+            
           </v-timeline>
         </v-card-text>
       </v-card>
@@ -69,28 +67,26 @@
 </template>
 
 <script>
+ 
   export default {
     data: () => ({
-      messages: [
-        {
-          from: 'You',
-          message: `Sure, I'll see you later.`,
-          time: '10:42am',
-          color: 'deep-purple lighten-1',
-        },
-        {
-          from: 'John Doe',
-          message: 'Yeah, sure. Does 1:00pm work?',
-          time: '10:37am',
-          color: 'green',
-        },
-        {
-          from: 'You',
-          message: 'Did you still want to grab lunch today?',
-          time: '9:47am',
-          color: 'deep-purple lighten-1',
-        },
-      ],
     }),
+    methods: {
+
+      // para validar si el curso esta terminado o no para que se muestre en la card
+      terminado(cupos, inscritos){
+        return (cupos === inscritos) ? 'Si' : 'No'
+      }
+    },
+    computed:{
+
+      // para llamar al listado de cursos desde el store
+      listadoCursos() {
+        const cursos = this.$store.getters.getCursos;
+        return cursos;
+      }
+    },
+    created() {
+    }
   }
 </script>

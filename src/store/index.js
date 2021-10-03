@@ -12,6 +12,7 @@ const store = new Vuex.Store({
       email: '',
       path: '/login'
     },
+    isDeleted: false,
     cursos: [
       /*{
         codigo: "C00101",
@@ -100,11 +101,17 @@ const store = new Vuex.Store({
     },
     getIsLoading({isLoading}) {
       return isLoading;
+    },
+    getIsDeleted({isDeleted}) {
+      return isDeleted;
     }
   },
   mutations: {
     isLoading(state, load){
       state.isLoading = load;
+    },
+    isDeleted(state, load){
+      state.isDeleted = load;
     },
     setCurrentUser(state, user){
       state.currentUser.email = user;
@@ -145,6 +152,7 @@ const store = new Vuex.Store({
     // para eliminar el curso de firebase
      eliminarCurso({ commit, dispatch }, cursoId) {
        commit("isLoading", true);
+       commit("isDeleted", true);
         Firebase
           .firestore()
           .collection("curso")

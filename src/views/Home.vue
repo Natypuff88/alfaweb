@@ -2,6 +2,8 @@
     <div>
         <v-container> 
 
+            
+
             <h1 class="text-center mt-5" > Lista de cursos </h1>
             <Cards />
          

@@ -4,6 +4,10 @@
         <v-card-title>
           <span class="text-h5">Editar</span>
         </v-card-title>
+            
+        <v-alert dense icon="mdi-cancel" v-if="error" outlined type="red" >
+          La cantidad de inscritos no puede ser mayor al cupo del curso.
+        </v-alert>
         <v-card-text>
           <v-container>
             <v-row>
@@ -25,8 +29,11 @@
               <v-col cols="12">
                 <v-text-field label="Cupos"  v-model="form.cupos" type="number" required></v-text-field>
               </v-col>
+              <v-col cols="12">
+                <v-text-field label="Inscritos"  v-model="form.inscritos" type="number" required></v-text-field>
+              </v-col>
                  <v-col cols="12">
-                <v-text-field label="Fecha registro"  v-model="form.registro" type="text" required></v-text-field>
+                <v-date-picker label="Fecha registro"  v-model="form.registro" required></v-date-picker>
               </v-col>
               <v-col cols="12">
                    <v-text-field label="URL Imagen"  v-model="form.imagen" type="text" required></v-text-field>
@@ -55,6 +62,7 @@ export default {
     props: ['id'],
     data(){
         return {
+            error: false,
             form: {
                 codigo: "",
                 nombre: "",
@@ -80,12 +88,18 @@ export default {
       },
       // Para guardar al pulsar el botón
       guardar(){
-        const data = this.form;
-        this.editarCurso({curso: data, id: this.form.id})
-        // Después de editar vuelvo a la Adm
-        .then(()=> {
-          this.$router.push({ name: "Administracion" });
-        })
+        if(this.form.cupos < this.form.inscritos) {
+          this.error = true;
+
+        }
+        if(!this.error) {
+          const data = this.form;
+          this.editarCurso({curso: data, id: this.form.id})
+          // Después de editar vuelvo a la Adm
+          .then(()=> {
+            this.$router.push({ name: "Administracion" });
+          })
+        }
       }
     },
     mounted(){
@@ -94,12 +108,12 @@ export default {
           // Code that will run only after the
           // entire view has been rendered
           const curso = this.$store.getters.getCursos.find((c) => c.id === this.id);
-          const tempCosto = curso.costo.replace("$", "").replace(".", "").trim();
+          // const tempCosto = curso.costo.replace("$", "").replace(".", "").trim();
           this.form = {
             ...curso
           }
-          console.log(curso)
-          this.form.costo = tempCosto;
+         // console.log(curso)
+          // this.form.costo = tempCosto;
       })
     },
 }

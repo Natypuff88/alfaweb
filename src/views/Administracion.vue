@@ -1,7 +1,9 @@
 <template>
     <div>
         <v-container> 
-
+            <v-alert dense icon="mdi-account-check" outlined type="green" v-if="isDeleted">
+              El curso fue eliminado correctamente
+            </v-alert>
             <v-row class="justify-center mt-5 mb-5"> 
 
                 <h1 class="text-center d-inline" > Administración </h1> 
@@ -10,7 +12,7 @@
                     Agregar curso
                 </v-btn>
             </v-row>
-
+            
             <v-data-table v-if="!isLoading" :headers="headers" :items="listadoCursos" class="elevation-1 m-5">
                     <template v-slot:item.costo="{ item }">
                         <v-chip :color="getColor(item.costo)" dark>
@@ -27,7 +29,80 @@
                         <v-icon small @click="eliminar(item)">mdi-delete</v-icon>
                     </template>
             </v-data-table>
+            <div>
+                <v-alert dense icon="mdi-account-check" outlined type="purple" >
+                        Cantidad total de alumnos permitidos: {{permitidos}}
+                </v-alert>
+
+                     <v-alert
+                    dense
+                    icon="mdi-account-plus"
+                    outlined
+                    type="blue"
+                    >
+                        Cantidad total de alumnos inscritos: {{inscritos}}
+                </v-alert>
+
+                     <v-alert
+                    dense
+                    icon="mdi-alarm"
+                    outlined
+                    type="red"
+                    >
+                        Cantidad total de cupos restantes: {{restantes}}
+                </v-alert>
+
+                     <v-alert
+                    dense
+                    icon="mdi-cancel"
+                    outlined
+                    type="pink"
+                    >
+                        Cantidad total de cursos terminados: {{terminados}}
+                </v-alert>
+
+                     <v-alert
+                    dense
+                    icon="mdi-bell"
+                    outlined
+                    type="brown"
+                    >
+                        Cantidad total de cursos activos: {{activos}}
+                </v-alert>
+
+                     <v-alert
+                    dense
+                    icon="mdi-bell"
+                    outlined
+                    type="red"
+                    >
+                        Cantidad total de cursos: {{listadoCursos.length}}
+                </v-alert>
+
+               
+            </div>
         </v-container>
+        <v-dialog v-model="showDeleteModal" persistent max-width="600px" >
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Eliminar curso</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            Esta seguro que desea eliminar el curso ?
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="showDeleteModal  = false;" >
+            Cancelar
+          </v-btn>
+          <v-btn color="blue darken-1" text @click="deleted=true; confirmEliminar();">
+            Si, eliminar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
       <v-dialog v-model="showModal" persistent max-width="600px" >
       <v-card>
         <v-card-title>
@@ -35,6 +110,9 @@
         </v-card-title>
         <v-card-text>
           <v-container>
+            <v-alert dense icon="mdi-cancel" v-if="error" outlined type="red" >
+            La cantidad de inscritos no puede ser mayor al cupo del curso.
+          </v-alert>
             <v-row>
               <v-col  cols="12">
                 <v-text-field label="Codigo" v-model="form.codigo" required></v-text-field>
@@ -54,8 +132,11 @@
               <v-col cols="12">
                 <v-text-field label="Cupos"  v-model="form.cupos" type="number" required></v-text-field>
               </v-col>
+              <v-col cols="12">
+                <v-text-field label="Inscritos"  v-model="form.inscritos" type="number" required></v-text-field>
+              </v-col>
                 <v-col cols="12">
-                <v-text-field label="Fecha registro"  v-model="form.registro" type="text" required></v-text-field>
+                <v-date-picker label="Fecha registro"  v-model="form.registro" required></v-date-picker>
               </v-col>
                <v-col cols="12">
                    <v-text-field label="URL Imagen"  v-model="form.imagen" type="text" required></v-text-field>
@@ -86,6 +167,9 @@
       return {
         selectedItem: {
         },
+        error: false,
+        showDeleteModal: false,
+        deleted: false,
         form: {
           codigo: "",
           nombre: "",
@@ -144,14 +228,30 @@
       },
       // para eliminar el elemento
       eliminar(item) {
-        this.eliminarCurso(item.id)
+        this.toDelete = item;
+        this.showDeleteModal = true;
+      },
+      confirmEliminar(){
+        this.deleted = true;
+        this.eliminarCurso(this.toDelete.id)
+        this.showDeleteModal = false;
+        
       },
       // para guardarlos datos del modal
       guardar(){
-        this.agregarCurso(this.form);
+        if(this.form.cupos < this.form.inscritos) {
+          this.error = true;
+
+        }
+        if(!this.error) { 
+          this.agregarCurso(this.form);
+        }
       }
     },
     computed:{
+      isDeleted(){
+        return this.$store.getters.getIsDeleted;
+      },
       isLoading(){
         return this.$store.getters.getIsLoading;
       },
@@ -161,15 +261,63 @@
         const cursos = this.$store.getters.getCursos;
         let listadoCursos = [];
         cursos.forEach((curso) => {
-            curso.costo = "$ " +(curso.costo).toString().toLocaleString()
+           //  const temCosto = "$ " +(+curso.costo).toString().toLocaleString()
             const obj = {
                 ...curso,
                 terminado: this.terminado(curso.cupos, curso.inscritos),
-                herramientas: ''
+                herramientas: '',
             }
             listadoCursos.push(obj);
         })
         return listadoCursos;
+      },
+      permitidos(){
+        let permitidos = 0;
+        const cursos = this.$store.getters.getCursos;
+        cursos.forEach((curso) => {
+          permitidos += +curso.cupos;
+        })
+        return permitidos;
+      },
+      inscritos(){
+        let inscritos = 0;
+        const cursos = this.$store.getters.getCursos;
+        cursos.forEach((curso) => {
+          inscritos += +curso.inscritos;
+        })
+        return inscritos;
+      },
+      restantes(){
+        let restantes = 0;
+        const cursos = this.$store.getters.getCursos;
+        cursos.forEach((curso) => {
+          restantes += +curso.cupos - curso.inscritos;
+        })
+        return restantes;
+      },
+      terminados(){
+        let terminado = 0;
+        const today = new Date();
+        const cursos = this.$store.getters.getCursos;
+        cursos.forEach((curso) => {
+          const cursoDate = new Date(curso.registro);
+          if(cursoDate.getTime() < today.getTime()){ 
+            terminado += +1;
+          }
+        })
+        return terminado;
+      },
+      activos(){
+        let activos = 0;
+        const today = new Date();
+        const cursos = this.$store.getters.getCursos;
+        cursos.forEach((curso) => {
+          const cursoDate = new Date(curso.registro);
+          if(cursoDate.getTime() > today.getTime()){ 
+            activos += +1;
+          }
+        })
+        return activos;
       }
     },
     created() {
